@@ -8,13 +8,12 @@ const output = templateBuilder({
 })
 */
 
-const QUOTE = "'";
-const ATTRIBUTE_QUOTE = "\"";
-const USE_BRACKET = false;
+const QUOTE = '\'';
+const ATTRIBUTE_QUOTE = '"';
 
 const ENTITY_REGEX = /(\&#?\w+;)/
 
-const svgCaseSensitiveTagNames = ["altGlyph", "altGlyphDef", "altGlyphItem", "animateColor", "animateMotion", "animateTransform", "clipPath", "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap", "feDistantLight", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge", "feMergeNode", "feMorphology", "feOffset", "fePointLight", "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence", "foreignObject", "glyphRef", "linearGradient", "radialGradient", "textPath"];
+const svgCaseSensitiveTagNames = ['altGlyph', 'altGlyphDef', 'altGlyphItem', 'animateColor', 'animateMotion', 'animateTransform', 'clipPath', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence', 'foreignObject', 'glyphRef', 'linearGradient', 'radialGradient', 'textPath'];
 
 const svgCaseSensitiveTagNamesMap = {};
 svgCaseSensitiveTagNames.forEach((term) => {
@@ -29,16 +28,16 @@ function each(list, f) {
 
 function createFragment(markup) {
     // escape HTML entities, to be resolved in addVirtualString
-    markup = markup.replace(/&/g, "&amp;")
-    if (markup.indexOf("<!doctype") >= 0) {
+    markup = markup.replace(/&/g, '&amp;')
+    if (markup.indexOf('<!doctype') >= 0) {
         return [
             new DOMParser()
-            .parseFromString(markup, "text/html")
+            .parseFromString(markup, 'text/html')
             .childNodes[1]
         ]
     }
-    const container = document.createElement("div")
-    container.insertAdjacentHTML("beforeend", markup)
+    const container = document.createElement('div')
+    container.insertAdjacentHTML('beforeend', markup)
     return container.childNodes
 }
 
@@ -74,7 +73,7 @@ function TemplateBuilder(virtual) {
 
 TemplateBuilder.prototype = {
     addVirtualString: function(el) {
-        const content = el.replace(/(["\r\n])/g, "\\$1")
+        const content = el.replace(/(["\r\n])/g, '\\$1')
         // handle HTML entities
         const contentWithEntities = content.split(ENTITY_REGEX)
         if (contentWithEntities.length > 1) {
@@ -97,38 +96,38 @@ TemplateBuilder.prototype = {
     },
 
     addVirtualAttrs: function(el) {
-        let virtual = el.tag === "div" ? "" : el.tag
+        let virtual = el.tag === 'div' ? '' : el.tag
 
         if (el.attrs.class) {
-            let attrs = el.attrs.class.replace(/\s+/g, ".")
+            let attrs = el.attrs.class.replace(/\s+/g, '.')
             virtual += `.${attrs}`
             el.attrs.class = undefined
         }
 
         each(Object.keys(el.attrs).sort(), function(attrName) {
-            if (attrName === "style") return
+            if (attrName === 'style') return
             if (el.attrs[attrName] === undefined) return
             let attrs = el.attrs[attrName]
-            attrs = attrs.replace(/[\n\r\t]/g, " ")
-            attrs = attrs.replace(/\s+/g, " ") // clean up redundant spaces we just created
-            attrs = attrs.replace(/'/g, "\\'") // escape quotes
+            attrs = attrs.replace(/[\n\r\t]/g, ' ')
+            attrs = attrs.replace(/\s+/g, ' ') // clean up redundant spaces we just created
+            attrs = attrs.replace(/'/g, '\\\'') // escape quotes
             virtual += `[${attrName}=${ATTRIBUTE_QUOTE}${attrs}${ATTRIBUTE_QUOTE}]`
         })
 
-        if (virtual === "") virtual = "div"
+        if (virtual === '') virtual = 'div'
         virtual = `${QUOTE}${virtual}${QUOTE}` // add quotes
 
         if (el.attrs.style) {
-            let attrs = el.attrs.style.replace(/(^.*);\s*$/, "$1") // trim trailing semi-colon
-            attrs = attrs.replace(/[\n\r]/g, "") // remove newlines
+            let attrs = el.attrs.style.replace(/(^.*);\s*$/, '$1') // trim trailing semi-colon
+            attrs = attrs.replace(/[\n\r]/g, '') // remove newlines
             attrs = attrs.split(/\s*;\s*/) // ["color:#f00", "border: 1px solid red"]
             attrs = attrs.map((propValue) => {
                 // "color:#f00"
                 return propValue.split(/\s*:\s*/).map((part) => {
                     return `\${QUOTE}${part}\${QUOTE}`
-                }).join(": ") // "\"color\": \"#f00\""
+                }).join(': ') // "\"color\": \"#f00\""
             });
-            attrs = attrs.join(", ")
+            attrs = attrs.join(', ')
             virtual += `, {style: {${attrs}}}`
         }
 
@@ -144,7 +143,7 @@ TemplateBuilder.prototype = {
 
     complete: function() {
         each(this.virtual, function(el) {
-            if (typeof el === "string") {
+            if (typeof el === 'string') {
                 // dimiss:
                 // - empty strings
                 // - single escaped quotes
@@ -161,8 +160,8 @@ TemplateBuilder.prototype = {
 }
 
 const whitespace = (level, indent) => {
-    if (level < 0) return ""
-    let whitespace = ""
+    if (level < 0) return ''
+    let whitespace = ''
     for (var i = 0; i < level; i++) {
         whitespace += indent
     }
@@ -177,54 +176,55 @@ const contentTemplate = (content, whitespace) => (
 `\n${whitespace}${content}`
 );
 
-const singleMithrilNodeTemplate = (mithrilNode, children, whitespace) => (
+const singleMithrilNodeTemplate = ({mithrilNode, whitespace}) => (
 `\n${whitespace}m(${mithrilNode})`
 );
 
-const mithrilNodeMultipleChildrenTemplate = (mithrilNode, children, whitespace, indent) =>
-USE_BRACKET
-? `\n${whitespace}m(${mithrilNode},
-${whitespace}${indent}[${children}
+const mithrilNodeMultipleChildrenTemplate = ({mithrilNode, children, whitespace, indent, useBracket}) => {
+    const c = useBracket ? `[
+${children}
 ${whitespace}${indent}]
-${whitespace})`
-: `\n${whitespace}m(${mithrilNode},
-${whitespace}${indent}${children}
-${whitespace}${indent}
-${whitespace})`;
+` : `
+${children}
+${whitespace}${indent}`
 
-const mithrilNodeSingleChildTemplate = (mithrilNode, child, whitespace) => (
-`\n${whitespace}m(${mithrilNode}, ${child}
+    return `
+\n${whitespace}m(${mithrilNode}, ${c}
+${whitespace})`
+}
+
+const mithrilNodeSingleChildTemplate = ({mithrilNode, children, whitespace}) => (
+`\n${whitespace}m(${mithrilNode}, ${children}
 ${whitespace})`
 );
 
-const template = (mithrilNode, children, whitespace, indent) => (
-    children
-        ? children.length > 1
-            ? mithrilNodeMultipleChildrenTemplate(mithrilNode, children, whitespace, indent)
-            : mithrilNodeSingleChildTemplate(mithrilNode, children, whitespace, indent)
-        : singleMithrilNodeTemplate(mithrilNode, children, whitespace, indent)
+const template = params => (
+    params.children
+        ? params.children.length > 1
+            ? mithrilNodeMultipleChildrenTemplate(params)
+            : mithrilNodeSingleChildTemplate(params)
+        : singleMithrilNodeTemplate(params)
 )
 
-const formatCode = (data, level, indent) => {
-    if (!data) {
-        return ""
-    }
+const formatCode = (data, opts) => {
+    if (!data) return ''
+    const { level, indent } = opts
     return data.map((d) => {
         const space = whitespace(level, indent)
         if (d.content) {
             return contentTemplate(d.content, space)
         }
-        const node = d.node || ""
+        const mithrilNode = d.node || ''
         const newLevel = level + (d.children && d.children.length > 1 ? 2 : 1)
-        const children = formatCode(d.children, newLevel, indent) || ""
-        return template(node, children, space, indent)
+        const children = formatCode(d.children, Object.assign({}, opts, { level: newLevel })) || ''
+        return template(Object.assign({}, opts, { mithrilNode, children, whitespace: space, indent }))
     })
 }
 
 const indentCharsMap = {
-    "2": "  ",
-    "4": "    ",
-    "tab": "\t"
+    '2': '  ',
+    '4': '    ',
+    'tab': '\t'
 }
 
 /*
@@ -236,18 +236,18 @@ opts: {
 const templateBuilder = (opts) => {
     const source = createVirtual(createFragment(opts.source))
     const parsed = new TemplateBuilder(source).complete()
-    const indentLevel = parsed.length > 1
-        ? 1
-        : 0
-    const indentChars = indentCharsMap[opts.indent || "4"]
-    const formatted = formatCode(parsed, indentLevel, indentChars)
+    const level = parsed.length > 1 ? 1 : 0
+    const indent = indentCharsMap[opts.indent || '4']
+    const useBracket = opts.useBracket || false
+    const quotes = opts.quotes || { quote: '\'', attrQuote: '"' }
+    const formatted = formatCode(parsed, { level, indent, useBracket, quotes })
 
     // only wrap output in brackets when it is a list
     const wrapped = formatted.length > 1
-        ? wrapperTemplate(formatted.join(", "))
-        : formatted.join("").trim()
+        ? wrapperTemplate(formatted.join(', '))
+        : formatted.join('').trim()
     return wrapped
 }
 
-if (typeof module != "undefined" && module !== null && module.exports) module.exports = templateBuilder;
-else if (typeof define === "function" && define.amd) define(function() {return templateBuilder});
+if (typeof module != 'undefined' && module !== null && module.exports) module.exports = templateBuilder;
+else if (typeof define === 'function' && define.amd) define(function() {return templateBuilder});
