@@ -8,6 +8,10 @@ const output = templateBuilder({
 })
 */
 
+const QUOTE = "'";
+const ATTRIBUTE_QUOTE = "\"";
+const USE_BRACKET = false;
+
 const ENTITY_REGEX = /(\&#?\w+;)/
 
 const svgCaseSensitiveTagNames = ["altGlyph", "altGlyphDef", "altGlyphItem", "animateColor", "animateMotion", "animateTransform", "clipPath", "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap", "feDistantLight", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge", "feMergeNode", "feMorphology", "feOffset", "fePointLight", "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence", "foreignObject", "glyphRef", "linearGradient", "radialGradient", "textPath"];
@@ -89,7 +93,7 @@ TemplateBuilder.prototype = {
             this.children.push({
                 content: `"${content}"`
             })
-        }        
+        }
     },
 
     addVirtualAttrs: function(el) {
@@ -103,16 +107,16 @@ TemplateBuilder.prototype = {
 
         each(Object.keys(el.attrs).sort(), function(attrName) {
             if (attrName === "style") return
-            if (el.attrs[attrName] === undefined) return 
+            if (el.attrs[attrName] === undefined) return
             let attrs = el.attrs[attrName]
             attrs = attrs.replace(/[\n\r\t]/g, " ")
             attrs = attrs.replace(/\s+/g, " ") // clean up redundant spaces we just created
             attrs = attrs.replace(/'/g, "\\'") // escape quotes
-            virtual += `[${attrName}='${attrs}']`
+            virtual += `[${attrName}=${ATTRIBUTE_QUOTE}${attrs}${ATTRIBUTE_QUOTE}]`
         })
-        
+
         if (virtual === "") virtual = "div"
-        virtual = `"${virtual}"` // add quotes
+        virtual = `${QUOTE}${virtual}${QUOTE}` // add quotes
 
         if (el.attrs.style) {
             let attrs = el.attrs.style.replace(/(^.*);\s*$/, "$1") // trim trailing semi-colon
@@ -121,7 +125,7 @@ TemplateBuilder.prototype = {
             attrs = attrs.map((propValue) => {
                 // "color:#f00"
                 return propValue.split(/\s*:\s*/).map((part) => {
-                    return `\"${part}\"`
+                    return `\${QUOTE}${part}\${QUOTE}`
                 }).join(": ") // "\"color\": \"#f00\""
             });
             attrs = attrs.join(", ")
@@ -177,12 +181,16 @@ const singleMithrilNodeTemplate = (mithrilNode, children, whitespace) => (
 `\n${whitespace}m(${mithrilNode})`
 );
 
-const mithrilNodeMultipleChildrenTemplate = (mithrilNode, children, whitespace, indent) => (
-`\n${whitespace}m(${mithrilNode},
+const mithrilNodeMultipleChildrenTemplate = (mithrilNode, children, whitespace, indent) =>
+USE_BRACKET
+? `\n${whitespace}m(${mithrilNode},
 ${whitespace}${indent}[${children}
 ${whitespace}${indent}]
 ${whitespace})`
-);
+: `\n${whitespace}m(${mithrilNode},
+${whitespace}${indent}${children}
+${whitespace}${indent}
+${whitespace})`;
 
 const mithrilNodeSingleChildTemplate = (mithrilNode, child, whitespace) => (
 `\n${whitespace}m(${mithrilNode}, ${child}
