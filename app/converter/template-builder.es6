@@ -8,9 +8,6 @@ const output = templateBuilder({
 })
 */
 
-const QUOTE = '\'';
-const ATTRIBUTE_QUOTE = '"';
-
 const ENTITY_REGEX = /(\&#?\w+;)/
 
 const svgCaseSensitiveTagNames = ['altGlyph', 'altGlyphDef', 'altGlyphItem', 'animateColor', 'animateMotion', 'animateTransform', 'clipPath', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology', 'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile', 'feTurbulence', 'foreignObject', 'glyphRef', 'linearGradient', 'radialGradient', 'textPath'];
@@ -95,7 +92,8 @@ TemplateBuilder.prototype = {
         }
     },
 
-    addVirtualAttrs: function(el) {
+    addVirtualAttrs: function(el, quotes) {
+        const { attributeQuote, quote } = quotes
         let virtual = el.tag === 'div' ? '' : el.tag
 
         if (el.attrs.class) {
@@ -111,11 +109,11 @@ TemplateBuilder.prototype = {
             attrs = attrs.replace(/[\n\r\t]/g, ' ')
             attrs = attrs.replace(/\s+/g, ' ') // clean up redundant spaces we just created
             attrs = attrs.replace(/'/g, '\\\'') // escape quotes
-            virtual += `[${attrName}=${ATTRIBUTE_QUOTE}${attrs}${ATTRIBUTE_QUOTE}]`
+            virtual += `[${attrName}=${attributeQuote}${attrs}${attributeQuote}]`
         })
 
         if (virtual === '') virtual = 'div'
-        virtual = `${QUOTE}${virtual}${QUOTE}` // add quotes
+        virtual = `${quote}${virtual}${quote}` // add quotes
 
         if (el.attrs.style) {
             let attrs = el.attrs.style.replace(/(^.*);\s*$/, '$1') // trim trailing semi-colon
@@ -124,7 +122,7 @@ TemplateBuilder.prototype = {
             attrs = attrs.map((propValue) => {
                 // "color:#f00"
                 return propValue.split(/\s*:\s*/).map((part) => {
-                    return `\${QUOTE}${part}\${QUOTE}`
+                    return `\${quote}${part}\${quote}`
                 }).join(': ') // "\"color\": \"#f00\""
             });
             attrs = attrs.join(', ')
@@ -132,7 +130,7 @@ TemplateBuilder.prototype = {
         }
 
         const children = (el.children.length !== 0)
-            ? new TemplateBuilder(el.children).complete()
+            ? new TemplateBuilder(el.children).complete(quotes)
             : null
 
         this.children.push({
@@ -141,7 +139,7 @@ TemplateBuilder.prototype = {
         })
     },
 
-    complete: function() {
+    complete: function(quotes) {
         each(this.virtual, function(el) {
             if (typeof el === 'string') {
                 // dimiss:
@@ -152,7 +150,7 @@ TemplateBuilder.prototype = {
                     this.addVirtualString(el)
                 }
             } else {
-                this.addVirtualAttrs(el)
+                this.addVirtualAttrs(el, quotes)
             }
         }.bind(this))
         return this.children
@@ -234,13 +232,13 @@ opts: {
 }
 */
 const templateBuilder = (opts) => {
+    const quotes = opts.quotes || { quote: '\'', attrQuote: '"' }
     const source = createVirtual(createFragment(opts.source))
-    const parsed = new TemplateBuilder(source).complete()
+    const parsed = new TemplateBuilder(source).complete(quotes)
     const level = parsed.length > 1 ? 1 : 0
     const indent = indentCharsMap[opts.indent || '4']
     const useBracket = opts.useBracket || false
-    const quotes = opts.quotes || { quote: '\'', attrQuote: '"' }
-    const formatted = formatCode(parsed, { level, indent, useBracket, quotes })
+    const formatted = formatCode(parsed, { level, indent, useBracket })
 
     // only wrap output in brackets when it is a list
     const wrapped = formatted.length > 1

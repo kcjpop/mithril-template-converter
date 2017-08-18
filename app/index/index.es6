@@ -25,8 +25,13 @@ const Settings = vnode => {
     vnode.attrs.setSettings('useBracket', e.currentTarget.checked)
   }
 
+  const doChangeQuotes = quotes => e => {
+    e.preventDefault()
+    vnode.attrs.setSettings('quotes', quotes)
+  }
+
   const view = _ => {
-    return m('.w-100.bg-light-gray.absolute.left-0.black.pa3.flex', { style: { top: '4rem' } },
+    return m('.w-100.bg-light-gray.black.pa3.flex', { style: { top: '4rem' } },
       m('.w-33',
         m('h4.f6.ma0.mb3.ttu.tracked.near-black', 'Indent'), INDENT_OPTIONS.map(option =>
           m('label.dib.mr3', m(`input.mr1[type=radio][name=ident][value=${option.value}]`, {
@@ -38,7 +43,8 @@ const Settings = vnode => {
       m('.w-33',
         m('h4.f6.ma0.mb3.ttu.tracked.near-black', 'Quotes'), QUOTE_OPTIONS.map(option =>
           m('label.dib.mr3', m(`input.mr1[type=radio][name=quotes][value=${option.value}]`, {
-            checked: vnode.attrs.getSettings('quote') === option.value,
+            checked: vnode.attrs.getSettings('quotes') === option.value,
+            onchange: doChangeQuotes(option.value)
           }), option.label)
         )
       ),
@@ -56,45 +62,13 @@ const Settings = vnode => {
 
 const App = vnode => {
   const state = {
-    source: `
-    <ul class="nav">
-    	<li>
-
-    			<a href="../../../index.html">Overview</a>
-
-    	</li>
-    	<li>
-
-    			<a href="../../../examples.html">Tutorials</a>
-
-    	</li>
-    	<li>
-
-    			<a href="../../../reference-1.1.0.html">Docs</a>
-
-    	</li>
-    	<li>
-
-    			<a href="../../../download.html">Download</a>
-
-    	</li>
-    	<li>
-
-    			<a href="../../../plugins.html">Plugins</a>
-
-    	</li>
-    	<li>
-
-    			<a href="../../../blog.html">Blog</a>
-
-    	</li>
-    </ul>
-    `,
+    source: '',
     output: '',
     settingsOpen: true,
     settings: {
       indent: INDENT_2,
-      useBracket: false
+      useBracket: false,
+      quotes: QUOTE_OPTIONS[0].value
     }
   };
 
@@ -109,6 +83,7 @@ const App = vnode => {
   const getOutput = _ => templateBuilder({
     source: state.source,
     indent: state.settings.indent,
+    quotes: state.settings.quotes,
     useBracket: state.settings.useBracket
   })
 
@@ -120,11 +95,14 @@ const App = vnode => {
   const buildSettingAlert = _ => {
     const opts = []
 
-    const { indent } = state.settings
+    const { indent, quotes } = state.settings
     const currentIndent = INDENT_OPTIONS.filter(option => option.value === indent)
-    if (currentIndent[0]) opts.push(`Indentation: ${currentIndent[0].label}`)
+    if (currentIndent[0]) opts.push(m('span.mr4.light-red[title=Indentation]', `${currentIndent[0].label}`))
 
-    return opts.join('')
+    const currentQuote = QUOTE_OPTIONS.filter(option => option.value === quotes)
+    if (currentQuote[0]) opts.push(m('span.mr4.light-red[title=Quoting]', `${currentQuote[0].label}`))
+
+    return opts
   }
 
   const view = _ => {
@@ -132,19 +110,24 @@ const App = vnode => {
       m('.w-100.pa3.bg-dark-gray.near-white.h3.flex.items-center.justify-between',
         m('',
           m('h1.dib.ttu.tracked.f5.fw6.ma0', 'Mithril Template Converter'),
-          m('span.f6.i.ml4', buildSettingAlert())
+          m('span.ml4.f6', 'A fork from ', m('a.light-blue[href="https://github.com/ArthurClemens/mithril-template-converter"]', 'ArthurClemens/mithril-template-converter')),
         ),
-        m('a[href=#]', { onclick: doToggleSettings }, `Settings ${state.settingsOpen ? '▲' : '▼'}`)
+        m('',
+          m('span.f6.ml4.ml-auto', buildSettingAlert()),
+          m('a[href=#]', { onclick: doToggleSettings }, `Settings ${state.settingsOpen ? '▲' : '▼'}`)
+        )
       ),
       state.settingsOpen ? m(Settings, { getSettings, setSettings }) : null,
-      m('.w-50', { style: { height: 'calc(100vh - 4.2rem)' } },
-        m('textarea.code.f6.w-100.h-100[placeholder="Enter your code"]', {
-          oninput: doSetSource
+      m('.w-50.ph3.pv4',
+        m('textarea.pa2.bg-light-gray.br2.bn.code.f6.w-100[placeholder="Enter your code"]', {
+          oninput: doSetSource,
+          style: { minHeight: '70vh' }
         })
       ),
-      m('.w-50', { style: { height: 'calc(100vh - 4.2rem)' } },
-        m('textarea.code.f6.w-100.h-100[placeholder="Mithril template will appear here. MAGIC!"]', {
-          value: getOutput()
+      m('.w-50.ph3.pv4',
+        m('textarea.pa2.bg-light-gray.br2.bn.code.f6.w-100[placeholder="Mithril template will appear here. MAGIC!"]', {
+          value: getOutput(),
+          style: { minHeight: '70vh' }
         })
       )
     )
