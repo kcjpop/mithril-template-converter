@@ -1,0 +1,19 @@
+<!-- SystemJS version -->
+<!doctype html>
+<title>Mithril HTML to JavaScript converter</title>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="cleartype" content="on">
+<link rel="stylesheet" href="https://unpkg.com/tachyons@4.8.0/css/tachyons.min.css"/>
+<style>
+body { font-family: Ubuntu, sans-serif; font-size: 14px; }
+a { text-decoration: none; color: #fefefe; }
+</style>
+<script src="node_modules/systemjs/dist/system.js"></script>
+<script src="config.js"></script>
+<body>
+<script>
+	System.import('app/index/index');
+</script>
+</body>
