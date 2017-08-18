@@ -1,19 +1,25 @@
 # Mithril HTML to JavaScript converter
 
-Version of Mithril's [template-converter](http://mithril.js.org/tools/template-converter.html) built with [Polythene](https://github.com/ArthurClemens/Polythene).
+A fork from [ArthurClemens/mithril-template-converter](https://github.com/ArthurClemens/mithril-template-converter).
 
-[Live version](http://arthurclemens.github.io/mithril-template-converter/index.html)
+Live version: [http://kcjpop.github.io/mithril-template-converter](http://kcjpop.github.io/mithril-template-converter)
 
+
+## What are the differences?
+
++ Option to switch between single quotes and double quotes
++ Option to pass children nodes as an array or spread params
++ New UI
 
 ## Call from script
 
-~~~javascript
+```javascript
 import templateBuilder from "app/converter/template-builder"
 const source = "<hr/>"
 const output = templateBuilder({
 	source
 })
-~~~
+```
 
 
 ## Updating code
@@ -30,4 +36,4 @@ es6 modules are transpiled to es5 using either:
 
 Run `tests/testrunner.html` in a browser.
 
-Update test code, transpile (see above), run test. 
+Update test code, transpile (see above), run test.
